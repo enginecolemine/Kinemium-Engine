@@ -17,7 +17,6 @@ local CAM_MAX_Y = 80
 local CAM_ZOOM_MIN = 0.1
 local CAM_ZOOM_MAX = 50
 local CAM_ZOOM_MUL = 1.15
-local CAM_LERP = 10
 local CAM_SENS_FP = 0.35
 
 local ZERO = Vector3.new(0, 0, 0)
@@ -164,6 +163,9 @@ end)
 RunService.RenderStepped:Connect(function(dt)
 	local delta = UserInputService:GetMouseDelta()
 
+	CAM_ZOOM_MIN = localPlayer.CameraMinZoomDistance
+	CAM_ZOOM_MAX = localPlayer.CameraMaxZoomDistance
+
 	if
 		not character
 		or not humanoid
@@ -211,30 +213,27 @@ RunService.RenderStepped:Connect(function(dt)
 	local camRot = CFrame.fromEulerAnglesYXZ(yaw, pitch, 0)
 
 	if isFirstPerson then
-		local firstPersonPos = head.CFrame.Position
+		local firstPersonPos = head.CFrame.Position + Vector3.new(0, 1, 0)
 		smoothCamPos = firstPersonPos
 
 		camera.CFrame = CFrame.new(firstPersonPos) * camRot
 		rootPart.CFrame = CFrame.new(rootPart.Position) * CFrame.fromEulerAnglesYXZ(yaw, 0, 0)
 
-		for _, part in pairs(character:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.Transparency = 1
-			end
-		end
+		character.Head.Transparency = 1
 
 		humanoid.TurnSpeed = 999
-		humanoid:Face(Vector3.new(math.sin(yaw), 0, -math.cos(yaw)))
+		humanoid:Face(Vector3.new(-math.sin(yaw), 0, -math.cos(yaw)))
+
+		localPlayer.CameraMode = Enum.CameraMode.LockFirstPerson
 	else
+		localPlayer.CameraMode = Enum.CameraMode.Classic
+
 		local focusPos = head.CFrame.Position
 		local camOffset = camRot * Vector3.new(0, 0, zoomDist)
 		local targetCamPos = focusPos + camOffset
 
-		local alpha = math.min(1, dt * CAM_LERP)
-		smoothCamPos = (smoothCamPos or targetCamPos):Lerp(targetCamPos, alpha)
-
-		local rayVector = smoothCamPos - focusPos
-		local finalCamPos = smoothCamPos
+		local rayVector = targetCamPos - focusPos
+		local finalCamPos = targetCamPos
 		if rayVector:Magnitude() > 1e-4 then
 			local camHit = workspace:Raycast(focusPos, rayVector, rayParams)
 			if camHit then
@@ -244,6 +243,9 @@ RunService.RenderStepped:Connect(function(dt)
 
 		for _, part in pairs(character:GetDescendants()) do
 			if part:IsA("BasePart") then
+				if part.Name == "HumanoidRootPart" then
+					continue
+				end
 				part.Transparency = 0
 			end
 		end

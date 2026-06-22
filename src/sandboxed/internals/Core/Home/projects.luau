@@ -12,6 +12,9 @@ local aereon = require("@Aereon")
 local gui = aereon.gui
 local rect = require("@Arect")
 local transparent = Color3.new(1, 1, 1):ToRaylib(0.5)
+local zembed = require("@zembed")
+
+_G.IsHoveringOnWindow = true
 
 local KinemiumFontService = game:GetService("KinemiumFontService")
 local StudioThemeService = game:GetService("StudioThemeService")
@@ -139,6 +142,7 @@ local function generateProjectCards()
 				ishared.EnableHomescreen = false
 				ProjectSyncService:StartSyncing(ishared.FolderPath)
 				renderer:SetDimension("3D")
+				_G.IsHoveringOnWindow = true
 			end,
 		})
 
@@ -220,6 +224,10 @@ group = aereon.create({
 					local projInput = projectPath:getText()
 
 					local path = "./src/projects/" .. gnInput
+					if zembed.IsEmbedded() then
+						path = "./projects/" .. gnInput
+					end
+
 					if zembed.IsEmbedded() then
 						path = "./projects/" .. gnInput
 					end
@@ -446,6 +454,8 @@ ishared.Home.pages["Projects"] = function(dt, alpha, slideOffset)
 	local dropdownWidth = 180
 	local gap = 12
 
+	SecondaryBackgroundColor = StudioThemeService.SelectedTheme.SecondaryBackgroundColor
+
 	group.addButton.set("obj_rect", arect.new(screenx - 50, 110 + slideOffset, 30, 30))
 	group.newProjectPrompt.set("obj_rect", arect.new(0, 0, 600, 250))
 	group.render(dt, { "newProjectPrompt" })
@@ -539,6 +549,7 @@ ishared.Home.pages["Projects"] = function(dt, alpha, slideOffset)
 	scrollArea.set("obj_rect", arect.new(100, scrollY, screenx - 170, screeny - (scrollY + 50)))
 	cardStack.set("width", screenx - 180) -- Adjust stack width for scrollbar
 	scrollArea.render(dt)
+	vend = KinemiumFontService.GetDefaultFontSmall()
 
 	projectFilterDropdown.render(dt)
 

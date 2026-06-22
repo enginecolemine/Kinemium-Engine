@@ -121,6 +121,7 @@ KinemiumFontService.InitRenderer = function(renderer, renderer_signal)
 		loadingFonts[name] = nil
 		loadedFonts[name] = loaded
 		FontAdded:Fire(name, path)
+
 		return loaded
 	end
 
@@ -146,6 +147,16 @@ KinemiumFontService.InitRenderer = function(renderer, renderer_signal)
 				FontRemoved:Fire(fontPath)
 			end
 			return fontInstance
+		end,
+
+		ReplaceDefaultFont = function(path)
+			print(loadingFonts, loadedFonts)
+			loadedFonts["DefaultEngineFont"] = nil
+			loadingFonts["DefaultEngineFont"] = nil
+			ENGINE_FONT_FILES["DefaultEngineFont"] = path
+			font = loadEngineFont("DefaultEngineFont", 32)
+			print("Loaded new font: ", font)
+			print(loadedFonts)
 		end,
 
 		GetDefaultFontSmall = function()

@@ -51,6 +51,11 @@ _G.ENGINE_ENDPOINT = {
 	MARKETPLACE = "https://quadigen.github.io/Kinemium-Engine-Plugins/plugins.json",
 	API = "https://kinemium-docs.vercel.app/api/docs/",
 }
+_G.ZUNE_EMBEDDED = nil
+
+if zembed.IsEmbedded() then
+	_G.ZUNE_EMBEDDED = `./zune{zune.platform.os == "windows" and ".exe" or zune.platform.os == "macos" and ".app"}`
+end
 
 _G.warn = function(...)
 	print("[\x1b[33mWARN\x1b[0m]", ...)
@@ -263,7 +268,10 @@ Kinemium_camera.Parent = kilang.env.Workspace
 
 -- SETUP KILANG
 kilang.renderer = renderer
-local CEnv = kilang:init(Kinemium_camera)
+
+local Kinemium_env = require("./environment/get")
+
+local CEnv = kilang:init(Kinemium_camera, Kinemium_env)
 
 local game = kilang.env.game
 kilang.env.FlagExists = FlagExists

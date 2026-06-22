@@ -15,8 +15,9 @@ local FileDialogService = game:GetService("FileDialogService")
 local KineFileService = game:GetService("KineFileService")
 local RBXModelImporter = game:GetService("RBXModelImporter")
 local Selection = game:GetService("Selection")
+local StudioThemeService = game:GetService("StudioThemeService")
 
-if game.Context ~= Enum.GameContext.Editor or FlagExists("cli") or FlagExists("headless") or FlagExists("client") then
+if game.Context ~= Enum.GameContext.Editor or FlagExists("cli") or FlagExists("headless") then
 	return
 end
 
@@ -62,15 +63,6 @@ local hoverspring = spring.new(2, 5)
 local notfound_tex = KinemiumIconLoader.ToTexture(KinemiumIconLoader.Get("NotFound.png"))
 
 local Theme = game:GetService("StudioThemeService").SelectedTheme
-local ThemeColors = {
-	background = Theme.BackgroundColor:ToRaylib(Theme.BackgroundTransparency),
-	text = Theme.TextColor:ToRaylib(Theme.TextTransparency),
-	guiHandles = Theme.GuiHandlesColor:ToRaylib(Theme.GuiHandlesTransparency),
-	secondaryBackground = Theme.SecondaryBackgroundColor:ToRaylib(Theme.SecondaryBackgroundColorTransparency),
-	secondaryText = Theme.SecondaryTextColor:ToRaylib(Theme.SecondaryTextTransparency),
-	image = Theme.ImageColor:ToRaylib(Theme.ImageTransparency),
-	arrowImage = Theme.ArrowImageColor:ToRaylib(0),
-}
 
 local expanded = {}
 local loadedIcon = {}
@@ -224,11 +216,12 @@ local searchBox = textbox.new({
 
 	cornerRadius = 0.5,
 	BorderTransparency = 1,
-	TextColor = ThemeColors.text,
+	TextColor = StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency),
 	padding = 5,
 })
 
 KinemiumIconLoader.new("Filter", "./src/assets/images/icons/Configuration.png")
+
 local filterIcon = KinemiumIconLoader.ToTexture(KinemiumIconLoader.Get("Filter"))
 
 local addMenuSearchBox = textbox.new({
@@ -240,7 +233,7 @@ local addMenuSearchBox = textbox.new({
 
 	cornerRadius = 0.3,
 	BorderTransparency = 1,
-	TextColor = ThemeColors.text,
+	TextColor = StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency),
 	padding = 4,
 })
 
@@ -807,7 +800,7 @@ local function drawAdditionMenu(instance, mousePos, btnY, toggleX)
 		vector.create(menuX + MENU_PADDING, menuY + MENU_PADDING),
 		18,
 		1,
-		ThemeColors.text
+		StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency)
 	)
 
 	local menuRect = { x = menuX, y = menuY, width = ADD_MENU_WIDTH, height = menuHeight }
@@ -883,7 +876,7 @@ local function drawAdditionMenu(instance, mousePos, btnY, toggleX)
 			vector.create(blockX, centerY - 6),
 			11,
 			1,
-			Theme.SecondaryTextColor:ToRaylib(0.4)
+			StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency)
 		)
 		rl.DrawTextEx(
 			boldFont,
@@ -891,7 +884,7 @@ local function drawAdditionMenu(instance, mousePos, btnY, toggleX)
 			vector.create(blockX + indicatorSize.x + gap, centerY - 6),
 			11,
 			1.5,
-			Theme.SecondaryTextColor:ToRaylib(0)
+			StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency)
 		)
 		local lineStartX = blockX + blockW + MENU_PADDING - 4
 		rl.DrawRectangle(lineStartX, centerY, ADD_MENU_WIDTH - lineStartX + menuX, 1, lineColor)
@@ -970,7 +963,9 @@ local function drawAdditionMenu(instance, mousePos, btnY, toggleX)
 						structs.Rectangle:new({ x = menuX + 4, y = itemY + 3, width = iconSize, height = iconSize }),
 						vector.create(0, 0),
 						0,
-						ThemeColors.image
+						StudioThemeService.SelectedTheme.ImageColor:ToRaylib(
+							StudioThemeService.SelectedTheme.ImageTransparency
+						)
 					)
 				end
 
@@ -981,7 +976,9 @@ local function drawAdditionMenu(instance, mousePos, btnY, toggleX)
 					vector.create(menuX + ADD_MENU_ITEM_HEIGHT + 4, itemY + 3),
 					17,
 					1,
-					ThemeColors.text
+					StudioThemeService.SelectedTheme.TextColor:ToRaylib(
+						StudioThemeService.SelectedTheme.TextTransparency
+					)
 				)
 			end
 		end
@@ -1122,11 +1119,20 @@ local function DrawTree(instance, indent, winX, winY, winWidth, isLastChild)
 					and instance
 						:GetMetadata("ExplorerIconColor")
 						:ToRaylib(instance:GetMetadata("ExplorerIconTransparency"))
-				or ThemeColors.image
+				or StudioThemeService.SelectedTheme.ImageColor:ToRaylib(
+					StudioThemeService.SelectedTheme.ImageTransparency
+				)
 		)
 
 		-- Draw text
-		rl.DrawTextEx(vend, instance.Name, vector.create(btnX + 28, btnY + 5), 18, 1, ThemeColors.text)
+		rl.DrawTextEx(
+			vend,
+			instance.Name,
+			vector.create(btnX + 28, btnY + 1),
+			18,
+			1,
+			StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency)
+		)
 
 		if isHovered and not isDragging then
 			local addData = { x = toggleX - 50, y = btnY + 2, width = iconSize, height = iconSize }
@@ -1137,7 +1143,7 @@ local function DrawTree(instance, indent, winX, winY, winWidth, isLastChild)
 				structs.Rectangle:new(addData),
 				vector.create(0, 0),
 				0,
-				ThemeColors.arrowImage
+				StudioThemeService.SelectedTheme.ImageColor:ToRaylib(StudioThemeService.SelectedTheme.ImageTransparency)
 			)
 
 			if isMouseInRect(addData, mousePos) and rl.IsMouseButtonReleased(0) == 1 then
@@ -1201,7 +1207,7 @@ local function DrawTree(instance, indent, winX, winY, winWidth, isLastChild)
 				structs.Rectangle:new(buttonData),
 				vector.create(0, 0),
 				0,
-				ThemeColors.arrowImage
+				StudioThemeService.SelectedTheme.ImageColor:ToRaylib(StudioThemeService.SelectedTheme.ImageTransparency)
 			)
 
 			if isMouseInRect(buttonData, mousePos) and rl.IsMouseButtonReleased(0) == 1 then
@@ -1247,10 +1253,16 @@ local explorerWindow = window.create({
 	width = frame.AbsoluteSize.X,
 	height = frame.AbsoluteSize.Y,
 })
-explorerWindow._contentHeight = 0
+
+window.focused = function(window)
+	_G.IsHoveringOnWindow = true
+end
+
+window.unfocused = function(window)
+	_G.IsHoveringOnWindow = false
+end
 
 local renderer = KinemiumRaylib.GetRenderer()
-local StudioThemeService = game:GetService("StudioThemeService")
 
 renderer.Pool.new("2d", function(data)
 	local dt = rl.GetFrameTime()
@@ -1267,7 +1279,11 @@ renderer.Pool.new("2d", function(data)
 		explorerWindow.width = frame.AbsoluteSize.X
 		explorerWindow.height = frame.AbsoluteSize.Y
 	end
-end)
+
+	if activeAddMenu then
+		drawAdditionMenu(activeAddMenu.instance, rl.GetMousePosition(), activeAddMenu.btnY, activeAddMenu.toggleX)
+	end
+end, 9999)
 
 explorerWindow.stepped = function(windowData)
 	if windowData.title ~= "Explorer" then
@@ -1455,10 +1471,17 @@ explorerWindow.stepped = function(windowData)
 			structs.Rectangle:new({ x = dragX + 2, y = dragY + 2, width = iconSize, height = iconSize }),
 			vector.create(0, 0),
 			0,
-			ThemeColors.image
+			StudioThemeService.SelectedTheme.ImageColor:ToRaylib(StudioThemeService.SelectedTheme.ImageTransparency)
 		)
 
-		rl.DrawTextEx(vend, dragInstance.Name, vector.create(dragX + 28, dragY + 5), 18, 1, ThemeColors.text)
+		rl.DrawTextEx(
+			vend,
+			dragInstance.Name,
+			vector.create(dragX + 28, dragY + 5),
+			18,
+			1,
+			StudioThemeService.SelectedTheme.TextColor:ToRaylib(StudioThemeService.SelectedTheme.TextTransparency)
+		)
 	end
 
 	-- Draw drop animation (lerp from drop position to tree position)
@@ -1502,9 +1525,6 @@ explorerWindow.stepped = function(windowData)
 
 	windowData._contentHeight = yOffset + 100
 
-	if activeAddMenu then
-		drawAdditionMenu(activeAddMenu.instance, rl.GetMousePosition(), activeAddMenu.btnY, activeAddMenu.toggleX)
-	end
 	SelectionMenu.render(dt)
 
 	-- Close addition menu when clicking outside
@@ -1550,6 +1570,8 @@ explorerWindow.stepped = function(windowData)
 			end
 		end
 	end
+
+	vend = KinemiumFontService.GetDefaultFont()
 
 	if searchFilterMenuVisible then
 		searchFilterMenu.render(dt)

@@ -40,6 +40,17 @@ return function(objects, data)
 		lastSize = { width = data.width or data[3] or 0, height = data.height or data[4] or 0 },
 		onClick = data.onClick,
 
+		-- flex layout properties
+		flexGrow = data.flexGrow or 0,
+		flexShrink = data.flexShrink or 1,
+		alignSelf = data.alignSelf or nil,
+		layoutOrder = data.layoutOrder or 0,
+		minWidth = data.minWidth or 0,
+		minHeight = data.minHeight or 0,
+		maxWidth = data.maxWidth or math.huge,
+		maxHeight = data.maxHeight or math.huge,
+		aspectRatio = data.aspectRatio or nil,
+
 		hoverT = 0,
 		entryT = 0,
 	}

@@ -1,11 +1,11 @@
--- NetworkReplicateSync: Chunked initial world sync and pending replication queue
--- Based on Polytoria's NetworkReplicateSync.cs (47-345)
--- Handles initial player join sync, runtime replication, and deletion replication
-
 local Protocol = require("../NetworkService/Protocol")
 
 local NetworkReplicateSync = {}
 NetworkReplicateSync.__index = NetworkReplicateSync
+
+-- NetworkReplicateSync: Chunked initial world sync and pending replication queue
+-- Based on Polytoria's NetworkReplicateSync.cs (47-345)
+-- Handles initial player join sync, runtime replication, and deletion replication
 
 local CHUNK_SIZE = 300
 local PENDING_CHECK_INTERVAL = 0.1
@@ -31,7 +31,6 @@ function NetworkReplicateSync:NextSequence()
 end
 
 -- Gather all replicable descendants from a root object
--- Based on Polytoria's GetReplicateDescendants()
 function NetworkReplicateSync:GetReplicateDescendants(root)
 	local result = {}
 	if not root then
@@ -96,7 +95,11 @@ function NetworkReplicateSync:SerializeObject(object)
 		local allProps = object:GetProperties()
 		if type(allProps) == "table" then
 			for propName, propValue in pairs(allProps) do
-				if propName ~= "Parent" and propName ~= "ClassName" then
+				if
+					propName ~= "Parent"
+					and propName ~= "ClassName"
+					and not (object.ClassName == "Player" and propName == "Character")
+				then
 					props[propName] = propValue
 				end
 			end
@@ -108,7 +111,6 @@ function NetworkReplicateSync:SerializeObject(object)
 end
 
 -- SyncPlaceToPlayer: send all replicated objects to a newly connected player
--- Based on Polytoria's SyncPlaceToPlayer (NetworkReplicateSync.cs:47-55)
 function NetworkReplicateSync:SyncPlaceToPlayer(session, root)
 	if not session or not root then
 		return
@@ -132,7 +134,6 @@ function NetworkReplicateSync:SyncPlaceToPlayer(session, root)
 end
 
 -- Handle incoming chunk on the client side
--- Based on Polytoria's NetRecvChunk (NetworkReplicateSync.cs:57-141)
 function NetworkReplicateSync:RecvChunk(chunkData, networkObjects, createObject)
 	if type(chunkData) ~= "table" or not chunkData.entries then
 		return
@@ -187,7 +188,6 @@ function NetworkReplicateSync:RecvChunk(chunkData, networkObjects, createObject)
 end
 
 -- Process pending replicates: check every frame for parents that have now spawned
--- Based on Polytoria's Process method (NetworkReplicateSync.cs:152-179)
 function NetworkReplicateSync:StartProcessLoop()
 	if self._processRunning then
 		return
@@ -239,7 +239,6 @@ end
 
 -- Handle runtime replication (object created during gameplay)
 -- Client -> Server: SendNetReplicate
--- Based on Polytoria's SendNetReplicate (NetworkReplicateSync.cs:253-277)
 function NetworkReplicateSync:SendNetReplicate(object)
 	if not object or not object.ShouldReplicate then
 		return
@@ -254,7 +253,6 @@ function NetworkReplicateSync:SendNetReplicate(object)
 end
 
 -- Handle deletion replication
--- Based on Polytoria's NetRecvReplicateRemove (NetworkReplicateSync.cs:347-369)
 function NetworkReplicateSync:RecvReplicateRemove(netId, networkObjects, isPlaceReplication)
 	if isPlaceReplication then
 		-- During place replication, record the removed path to prevent children from spawning

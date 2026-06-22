@@ -74,6 +74,14 @@ local scrollableToolbar
 local gui = aereon.gui
 local componentCache = {}
 
+window.focused = function(window)
+	_G.IsHoveringOnWindow = true
+end
+
+window.unfocused = function(window)
+	_G.IsHoveringOnWindow = false
+end
+
 local tooltipState = {
 	hoveredKey = nil,
 	hoverTimer = 0,
@@ -106,7 +114,7 @@ local fileMenu = gui.menu({
 		{
 			label = "Studio Settings",
 			onClick = function()
-				print("Studio Settings")
+				game.EngineSignal:Fire("EnableStudioSettingsMenu")
 			end,
 		},
 		{
@@ -123,7 +131,7 @@ local fileMenu = gui.menu({
 		{
 			label = "Game Settings",
 			onClick = function()
-				print("Game Settings")
+				game.EngineSignal:Fire("EnableGameSettingsMenu")
 			end,
 		},
 		{
@@ -152,7 +160,7 @@ local fileMenu = gui.menu({
 		{
 			label = "Documentation",
 			onClick = function()
-				rl.OpenURL("https://deepwiki.com/Qquaded/Kinemium-Engine")
+				rl.OpenURL("https://kinemium-docs.vercel.app")
 			end,
 		},
 		{
@@ -211,6 +219,10 @@ local function create_window(title, frame)
 					fileMenu.set("obj_rect", menuRect)
 					renderFileMenu = true
 				end,
+			},
+			{
+				name = "Help",
+				render = function(windowData) end,
 			},
 		},
 	})
@@ -650,7 +662,6 @@ fileMenu:hide()
 local fileMenuVisible = false
 local wasFileMenuShowing = false
 
--- tab change handler for file menu toggle
 window.tabChanged = function(self, index, tab)
 	if tab and tab.name == "File" then
 		if fileMenuVisible then
@@ -685,6 +696,8 @@ renderer.Pool.new("2d", function(data)
 	if game.Context ~= Enum.GameContext.Editor then
 		return
 	end
+
+	ishared.ToolbarMinimized = propback.Minimized
 
 	local dt = rl.GetFrameTime()
 	local mainTheme = StudioThemeService.SelectedTheme
@@ -819,6 +832,12 @@ end
 
 propback.stepped = function(propback)
 	if propback.title == "Toolbar" then
+		Theme = game:GetService("StudioThemeService").SelectedTheme
+		backgroundColor = Theme.BackgroundColor:ToRaylib(Theme.BackgroundTransparency)
+		TextColor = Theme.TextColor:ToRaylib(Theme.TextTransparency)
+		ImageColor = Theme.ImageColor:ToRaylib(Theme.ImageTransparency)
+		vend = KinemiumFontService.GetDefaultFont()
+
 		local dt = KinemiumRaylib.GetLib().GetFrameTime()
 		tooltipState.hoveredKey = nil
 		local totalElementsWidth = 0
@@ -919,7 +938,6 @@ propback.stepped = function(propback)
 		end
 
 		if renderFileMenu then
-			-- Close file menu on escape key
 			if rl.IsKeyPressed(256) == 1 then
 				fileMenu:hide()
 				fileMenuVisible = false
@@ -935,16 +953,6 @@ propback.stepped = function(propback)
 			end
 
 			fileMenu.render(dt)
-
-			-- Click-outside-to-close
-			if fileMenu.get("visible") and rl.IsMouseButtonReleased(0) == 1 then
-				if not (menuObjRect and arectlib.MouseIsInRect(menuObjRect)) then
-					fileMenu:hide()
-					fileMenuVisible = false
-					renderFileMenu = false
-					propback:SetTab(nil)
-				end
-			end
 
 			_G.__aereon_blockInput = false
 			renderFileMenu = false

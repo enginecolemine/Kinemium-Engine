@@ -338,7 +338,8 @@ return function(renderer, Kinemium_camera)
 		end
 	end
 
-	data.zune = {}
+	-- set zune as 0 to override zune global in sandboxed scripts
+	data.zune = 0
 
 	local c_api = capi(data)
 

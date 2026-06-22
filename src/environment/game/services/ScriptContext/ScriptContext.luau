@@ -82,6 +82,13 @@ ScriptContext.InitRenderer = function(renderer, signal, datamodel)
 						src = scriptObject,
 						require = function(target)
 							if type(target) == "string" then
+								if target:match("^@kine/") then
+									local name = string.sub(target, 7)
+									local api = require(`@{name}`) or require("../src/environment/builtin/" .. name)
+									if api then
+										return api:init(renderer, datamodel)
+									end
+								end
 								local api = pluginLoader.GetPluginApi(target)
 								if api then
 									return api
@@ -304,13 +311,20 @@ ScriptContext.InitRenderer = function(renderer, signal, datamodel)
 			end,
 
 			RunClientScripts = function()
-				local StarterPlayer, Players, CoreGui, InternalStorage =
-					getserv("StarterPlayer"), getserv("Players"), getserv("CoreGui"), getserv("InternalStorage")
+				local StarterPlayer, Players, CoreGui, InternalStorage, StarterClientScripts, StarterCharacterScripts =
+					getserv("StarterPlayer"),
+					getserv("Players"),
+					getserv("CoreGui"),
+					getserv("InternalStorage"),
+					datamodel.StarterPlayer.StarterPlayerScripts,
+					datamodel.StarterPlayer.StarterCharacterScripts
 
 				runScriptOfClass(StarterPlayer, "LocalScript")
 				runScriptOfClass(Players, "LocalScript")
 				runScriptOfClass(CoreGui, "LocalScript")
 				runScriptOfClass(InternalStorage, "LocalScript")
+				runScriptOfClass(StarterClientScripts, "LocalScript")
+				runScriptOfClass(StarterCharacterScripts, "LocalScript")
 
 				return true
 			end,

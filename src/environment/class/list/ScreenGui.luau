@@ -18,6 +18,30 @@ local proptble = {
 	BaseClass = "UIContainer",
 }
 
+local function profileBegin(name)
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:Begin(name)
+	end
+end
+
+local function profileSetCounter(name, value)
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:SetCounter(name, value)
+	end
+end
+
+local function profileNextFrame()
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:NextFrame()
+	end
+end
+
+local function profileEnd()
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:End()
+	end
+end
+
 return {
 	class = "ScreenGui",
 
@@ -27,9 +51,6 @@ return {
 				return
 			end
 
-			if not instance.Enabled then
-				return
-			end
 			local renderWidth, renderHeight
 
 			if IsHeadless then
@@ -62,11 +83,16 @@ return {
 				end
 			end
 
+			profileBegin("Gui render")
+			if not instance.Enabled then
+				return
+			end
 			for _, child in pairs(instance:GetChildren()) do
 				if child["render"] then
 					child.render(lib, child, dt, structs, renderer, datamodel)
 				end
 			end
+			profileEnd()
 		end
 
 		instance:SetProperties(proptble)

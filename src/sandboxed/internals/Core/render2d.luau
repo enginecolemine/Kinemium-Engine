@@ -10,10 +10,35 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local renderer = KinemiumRaylib.GetRenderer()
 local rl = KinemiumRaylib.GetLib()
+local const = KinemiumRaylib.GetConst()
 local KinemiumFontService = game:GetService("KinemiumFontService")
 local StudioThemeService = game:GetService("StudioThemeService")
 
 local vend = KinemiumFontService.GetDefaultFont()
+
+local function profileBegin(name)
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:Begin(name)
+	end
+end
+
+local function profileSetCounter(name, value)
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:SetCounter(name, value)
+	end
+end
+
+local function profileNextFrame()
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:NextFrame()
+	end
+end
+
+local function profileEnd()
+	if ENGINE_PROFILER then
+		ENGINE_PROFILER:End()
+	end
+end
 
 if FlagExists("cli") then
 	return
@@ -44,41 +69,46 @@ frame.Parent = screenGui
 
 local enableIDE = false
 local currentObject
+local activeTabs = {}
 
 EngineSignal:Connect(function(route, value, Script)
 	if route == "idestate" then
 		if value == true then
-			ide:openTab(Script.Name, Script.Source)
+			if activeTabs[Script.UniqueId] then
+				for i, tab in ipairs(ide.buffers) do
+					if tab.name == Script.Name then
+						ide:activateBuffer(i)
+						break
+					end
+				end
+				enableIDE = true
+				currentObject = Script
+				ide.text:clear()
+				ide.text:insertString(currentObject.Source)
+				ide.text:setCursor(1, 1)
+				ide._highlightCache = {}
 
+				game.Stop3DInput = true
+				return
+			end
+			ide:openTab(Script.Name, Script.Source)
+			activeTabs[Script.UniqueId] = true
+			-- activateBuffer is already called inside openTab via #self.buffers
 			enableIDE = true
 			currentObject = Script
 			game.Stop3DInput = true
 		else
 			enableIDE = false
 			currentObject = nil
-
 			game.Stop3DInput = false
 		end
 	end
 end)
-
 local window = aereon.window(game)
 
 repeat
 	task.wait()
 until frame.AbsolutePosition and frame.AbsoluteSize
-
-local initialPos = frame.AbsolutePosition or vector.create(0, 0)
-local initialSize = frame.AbsoluteSize or vector.create(800, 600)
-
-local ideWindow = window.create({
-	title = "Script Editor",
-	x = initialPos.X,
-	y = initialPos.Y,
-	width = initialSize.X,
-	height = initialSize.Y,
-	enabled = false,
-})
 
 --[[
 local viewportWindow = window.create({
@@ -92,34 +122,37 @@ local viewportWindow = window.create({
 })
 --]]
 
-ideWindow.stepped = function(data)
-	ideWindow.x = 0
-	ideWindow.y = 30
-	ideWindow.width = rl.GetRenderWidth()
-	ideWindow.height = rl.GetRenderHeight() - 30
-	ide.draw(0, 60, vector.create(rl.GetRenderWidth(), rl.GetRenderHeight() - 60), 50)
-
-	if currentObject then
-		if currentObject.IsOverridden then
-			ide.text:clear()
-			ide.text:insertString(currentObject.Source)
-			ide.text:setCursor(1, 1)
-			ide._highlightCache = {}
-			return
-		end
-		currentObject.Source = ide:getCode()
-	end
-end
-
 renderer.Pool.new("2d", function(data)
 	if game.Context ~= Enum.GameContext.Editor then
 		return
 	end
 
 	local dt = rl.GetFrameTime()
-	local mainTheme = StudioThemeService.SelectedTheme
+	vend = KinemiumFontService.GetDefaultFont()
 
-	ideWindow.enabled = enableIDE
+	if enableIDE then
+		ishared.path_enabled = false
+
+		local width = rl.GetRenderWidth()
+		local height = rl.GetRenderHeight() - 30
+		rl.DrawRectangle(0, 0, width, height, StudioThemeService.SelectedTheme.aereon.ide.BackgroundColor:ToRaylib(0))
+		ide.draw(0, 30, vector.create(width, height), 50, StudioThemeService.SelectedTheme.aereon.ide)
+
+		if currentObject then
+			if currentObject.IsOverridden then
+				ide.text:clear()
+				ide.text:insertString(currentObject.Source)
+				ide.text:setCursor(1, 1)
+				ide._highlightCache = {}
+				return
+			end
+			currentObject.Source = ide:getCode()
+		end
+	else
+		ishared.path_enabled = true
+	end
+
 	window.update(dt)
-	window.draw(dt, mainTheme)
-end)
+	window.draw(dt, StudioThemeService.SelectedTheme)
+end, -999999)
+-- we need this to draw as the very first item before all the other windows

@@ -7,6 +7,8 @@ if RunService:IsClient() then
 	return
 end
 
+_G.IsHoveringOnWindow = _G.IsHoveringOnWindow or false
+
 local player = Players.LocalPlayer
 while not player do
 	task.wait()
@@ -16,9 +18,11 @@ end
 local mouse = player:GetMouse()
 
 local Highlight = Instance.new("Highlight")
-Highlight.FillTransparency = 1
+Highlight.FillTransparency = 0.9
 Highlight.OutlineTransparency = 0
-Highlight.Parent = workspace
+Highlight.FillColor = Color3.new(0, 0.682, 1)
+Highlight.OutlineColor = Color3.new(0, 0.306, 1)
+Highlight.Parent = game.InternalStorage
 
 local dragging = false
 local draggedObject = nil
@@ -41,6 +45,9 @@ RunService.RenderStepped:Connect(function()
 		local right = rotationCF:GetRightVector()
 		local up = rotationCF:GetUpVector()
 		local look = rotationCF:GetLookVector()
+		if not draggedObject.Size then
+			return
+		end
 		local size = draggedObject.Size * 0.5
 
 		local extent = math.abs(normal:Dot(right)) * size.X
@@ -79,6 +86,9 @@ RunService.RenderStepped:Connect(function()
 		if ishared.isToolsActive then
 			return
 		end
+		if _G.IsHoveringOnWindow == true then
+			return
+		end
 		if mouse.Target and mouse.Target:IsA("BasePart") then
 			if mouse.Target.Size.X > 200 or mouse.Target.Size.Y > 200 or mouse.Target.Size.Z > 200 then
 				return
@@ -104,6 +114,9 @@ RunService.RenderStepped:Connect(function()
 
 	if mouse.Target then
 		if ishared.isToolsActive then
+			return
+		end
+		if _G.IsHoveringOnWindow == true then
 			return
 		end
 		if mouse.Target.BaseClass ~= "BasePart" then

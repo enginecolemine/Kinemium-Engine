@@ -42,6 +42,14 @@ local window = aereon.window(game)
 local arect = aereon.rect()
 local textbox = aereon.textbox(Theme, game)
 
+window.focused = function(window)
+	_G.IsHoveringOnWindow = true
+end
+
+window.unfocused = function(window)
+	_G.IsHoveringOnWindow = false
+end
+
 local CATEGORY_ORDER = { "Object", "Appearance", "Transform", "Behavior", "Other" }
 local CATEGORY_HEADER_HEIGHT = 22
 local CELL_HEIGHT = 30
@@ -280,7 +288,7 @@ datatypes["string"] = {
 							{ name = "All Files", extensions = { "*" } },
 						}
 					or {
-						{ name = "Images", extensions = { "png", "jpg", "jpeg", "bmp" } },
+						{ name = "Images", extensions = { "png", "jpg", "jpeg", "bmp", "gif" } },
 						{ name = "All Files", extensions = { "*" } },
 					}
 				local path = FileDialogService.RequestFile(exts)
@@ -1501,6 +1509,8 @@ window.stepped = function(windowData)
 		return
 	end
 
+	Theme = game:GetService("StudioThemeService").SelectedTheme
+
 	windowObject = windowData
 
 	local winX = windowData.x
@@ -1661,6 +1671,8 @@ window.stepped = function(windowData)
 		end
 	end
 	raylib.lib.EndScissorMode()
+
+	vend = KinemiumFontService.GetDefaultFont()
 
 	if colorPickerTarget then
 		local cpW, cpH = 240, winH

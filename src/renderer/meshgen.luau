@@ -631,6 +631,46 @@ function meshgen.uvSpherical(vertices)
 	end
 end
 
+function meshgen.uvBoxProject(vertices)
+	if #vertices == 0 then
+		return
+	end
+
+	local minX, minY, minZ = math.huge, math.huge, math.huge
+	local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
+	for _, v in ipairs(vertices) do
+		local px, py, pz = vec3(v.position or v.pos or v)
+		minX = math.min(px, minX)
+		minY = math.min(py, minY)
+		minZ = math.min(pz, minZ)
+		maxX = math.max(px, maxX)
+		maxY = math.max(py, maxY)
+		maxZ = math.max(pz, maxZ)
+	end
+
+	local rangeX = math.max(maxX - minX, EPSILON)
+	local rangeY = math.max(maxY - minY, EPSILON)
+	local rangeZ = math.max(maxZ - minZ, EPSILON)
+
+	for _, v in ipairs(vertices) do
+		local px, py, pz = vec3(v.position or v.pos or v)
+		local nx, ny, nz = vec3(v.normal or v.n)
+		local ax, ay, az = math.abs(nx), math.abs(ny), math.abs(nz)
+		local u, w
+		if ay >= ax and ay >= az then
+			u = (px - minX) / rangeX
+			w = (pz - minZ) / rangeZ
+		elseif ax >= az then
+			u = (pz - minZ) / rangeZ
+			w = (py - minY) / rangeY
+		else
+			u = (px - minX) / rangeX
+			w = (py - minY) / rangeY
+		end
+		v.uv = { u, w }
+	end
+end
+
 function meshgen.buildMeshData(vertices, indices, opts)
 	local verts = vertices
 	local idxs = indices
@@ -811,12 +851,12 @@ function meshgen.extractModelMesh(model, meshIndex)
 		positionsY[i + 1] = py
 		positionsZ[i + 1] = pz
 
-		if px < minX then minX = px end
-		if py < minY then minY = py end
-		if pz < minZ then minZ = pz end
-		if px > maxX then maxX = px end
-		if py > maxY then maxY = py end
-		if pz > maxZ then maxZ = pz end
+		minX = math.min(px, minX)
+		minY = math.min(py, minY)
+		minZ = math.min(pz, minZ)
+		maxX = math.max(px, maxX)
+		maxY = math.max(py, maxY)
+		maxZ = math.max(pz, maxZ)
 	end
 
 	-- Compute AABB dimensions and center
@@ -828,9 +868,9 @@ function meshgen.extractModelMesh(model, meshIndex)
 	local centerZ = (minZ + maxZ) * 0.5
 
 	-- Protect against degenerate (zero-size) axes
-	if sizeX < EPSILON then sizeX = 1 end
-	if sizeY < EPSILON then sizeY = 1 end
-	if sizeZ < EPSILON then sizeZ = 1 end
+	sizeX = math.min(EPSILON, sizeX)
+	sizeY = math.min(EPSILON, sizeY)
+	sizeZ = math.min(EPSILON, sizeZ)
 
 	-- Build normalized vertices: center at origin, scale to unit cube
 	-- Each axis is independently scaled so that the AABB maps to [-0.5, 0.5]
